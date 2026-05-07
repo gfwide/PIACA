@@ -1,34 +1,56 @@
 http:
+  middlewares:
+    audit-forward:
+      forwardAuth:
+        address: "http://audit-service:8080/ingest"
+        trustForwardHeader: true
+
   routers:
     example:
       entryPoints:
         - web
       rule: "PathPrefix(`/example`)"
       service: example-service
+      middlewares:
+        - audit-forward
 
     core-auth:
       entryPoints:
         - web
       rule: "PathPrefix(`/auth`)"
       service: core-auth-service
+      middlewares:
+        - audit-forward
 
     pet-management:
       entryPoints:
         - web
       rule: "PathPrefix(`/animals`)"
       service: pet-management-service
+      middlewares:
+        - audit-forward
 
     adoption-ai:
       entryPoints:
         - web
       rule: "PathPrefix(`/adoption`)"
       service: adoption-ai-service
+      middlewares:
+        - audit-forward
 
     godparenthood:
       entryPoints:
         - web
       rule: "PathPrefix(`/godparenthood`)"
       service: godparenthood-service
+      middlewares:
+        - audit-forward
+
+    audit:
+      entryPoints:
+        - web
+      rule: "PathPrefix(`/audit`)"
+      service: audit-service
 
   services:
     example-service:
@@ -55,3 +77,8 @@ http:
       loadBalancer:
         servers:
           - url: "http://piaca-godparenthood:3004"
+
+    audit-service:
+      loadBalancer:
+        servers:
+          - url: "http://audit-service:8080"
