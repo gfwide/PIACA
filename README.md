@@ -123,6 +123,15 @@ Secrets necessarios no GitHub:
 | Marina Schwerz Bon | marinasbon |
 | Kristen Arguello | kristenarguello |
 
+## Grupo E: Experiência Mobile
+
+| Aluno | Usuário do GitHub |
+|-------------|---------|
+| Giordano Fraga Faccioli | giordano-fraga |
+| Pedro Duarte dos Santos | PDS-Academico |
+| Gabriel Andreis Pivotto | gabriel.pivotto |
+| Pietro Lessa | pietrolessa |
+
 ## Grupo F: Infraestrutura e API Gateway
 
 | Aluno | Usuário do GitHub |
