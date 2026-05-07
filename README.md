@@ -114,6 +114,16 @@ Secrets necessarios no GitHub:
 
 ## Autores
 
+## Grupo A: Core e Auth
+
+| Aluno | Usuário do GitHub |
+|-------------|---------|
+| Henrique Corrales Marchiori | HMarchiori |
+|  |  |
+|  |  |
+|  |  |
+|  |  |
+
 ## Grupo C: Adoção e IA
 
 | Aluno | Usuário do GitHub |
