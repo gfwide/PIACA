@@ -12,6 +12,15 @@ class AdoptionService:
         # return self.repo.get_all() -- exemplo
         return [Adoption(_id="123abc", pet_name="apollo")]
 
+    def list_by_ong(self, ong_id: str) -> list[Adoption]:
+        return self.repo.read_adoptions_by_ong(ong_id)
+
+    def list_by_user(self, user_id: str) -> list[Adoption]:
+        return self.repo.read_adoptions_by_user(user_id)
+
+    def get_by_id(self, adoption_id: str) -> Adoption | None:
+        return self.repo.read_adoption_by_id(adoption_id)
+
     # should have a lot of other methods that will 
     # basically be the main logic for the routes
 
