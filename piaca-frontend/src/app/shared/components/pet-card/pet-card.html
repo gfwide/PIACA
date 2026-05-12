@@ -1,0 +1,33 @@
+<!-- <div class="card-container">
+    <img class="card-picture" [src]="pictureUrl"/>
+    <div class="card-content">
+        <div>
+            <h2>{{ name }}</h2>
+            <div class="card-info">
+                <p>{{ gender }}</p>
+                <div class="vertical-line"></div>
+                <p>{{ ageGroup }}</p>
+                <div class="vertical-line"></div>
+                <p>{{ size }}</p>
+            </div>
+        </div>
+        <p>{{ location }}</p>
+    </div>
+</div> -->
+
+<div class="card" style="width: fill; height: 20rem">
+  <img [src]="petInfo?.pictureUrl" class="card-img-top card-picture" />
+  <div class="card-content">
+    <div>
+      <h2>{{ petInfo?.name }}</h2>
+      <div class="card-info">
+        <p>{{ petInfo?.gender }}</p>
+        <div class="vertical-line"></div>
+        <p>{{ petInfo?.ageGroup }}</p>
+        <div class="vertical-line"></div>
+        <p>{{ petInfo?.sizeGroup }}</p>
+      </div>
+    </div>
+    <p>{{ petInfo?.location }}</p>
+  </div>
+</div>

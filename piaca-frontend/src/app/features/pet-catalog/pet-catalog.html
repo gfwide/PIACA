@@ -1,0 +1,8 @@
+<div class="pet-catalog-container">
+  <p>pet-catalog works!</p>
+  <div class="pet-catalog-pets">
+    @for (pet of pets; track pet.name) {
+      <app-pet-card [petInfo]="pet"></app-pet-card>
+    }
+  </div>
+</div>
