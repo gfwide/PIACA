@@ -1,7 +1,12 @@
 from uuid import UUID
 
 from app.schemas.survey import SubmitSurveyRequest, SurveyAnswerResponse
-from app.services.survey import MissingAnswersError, SurveyService, get_survey_service
+from app.services.survey import (
+    InvalidAnswerValueError,
+    MissingAnswersError,
+    SurveyService,
+    get_survey_service,
+)
 from fastapi import APIRouter, Depends, HTTPException
 
 router = APIRouter(tags=["survey"])
@@ -21,6 +26,14 @@ def answer_survey(
             detail={
                 "message": "Not all questions were answered",
                 "missing_questions": [str(q) for q in e.missing],
+            },
+        )
+    except InvalidAnswerValueError as e:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "Some answers contain invalid values",
+                "errors": e.errors,
             },
         )
 
@@ -52,6 +65,14 @@ def update_answers(
             detail={
                 "message": "Not all questions were answered",
                 "missing_questions": [str(q) for q in e.missing],
+            },
+        )
+    except InvalidAnswerValueError as e:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "Some answers contain invalid values",
+                "errors": e.errors,
             },
         )
     if result is None:

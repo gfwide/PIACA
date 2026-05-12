@@ -5,6 +5,7 @@ from fastapi import Depends
 
 from app.models.survey import QuestionnaireAnswer
 from app.repositories.survey import SurveyRepository, get_survey_repo
+from app.schemas.questions import QuestionTypes
 from app.schemas.survey import (
     AnswerItemRequest,
     AnswerItemResponse,
@@ -19,6 +20,11 @@ class MissingAnswersError(Exception):
         self.missing = missing
 
 
+class InvalidAnswerValueError(Exception):
+    def __init__(self, errors: list[dict]):
+        self.errors = errors
+
+
 class SurveyService:
     def __init__(self, repo: SurveyRepository, question_service: QuestionService):
         self.repo = repo
@@ -30,6 +36,10 @@ class SurveyService:
         missing = self.handle_not_matching_answers_amount(data.answers)
         if missing:
             raise MissingAnswersError(missing)
+
+        invalid = self.validate_answer_values(data.answers)
+        if invalid:
+            raise InvalidAnswerValueError(invalid)
 
         today = date.today()
         answer = self.repo.create_answer(user_id, today)
@@ -54,6 +64,10 @@ class SurveyService:
         if missing:
             raise MissingAnswersError(missing)
 
+        invalid = self.validate_answer_values(data.answers)
+        if invalid:
+            raise InvalidAnswerValueError(invalid)
+
         answer = self.repo.get_latest_answer_by_user(user_id)
         if answer is None:
             return None
@@ -75,6 +89,44 @@ class SurveyService:
         all_questions = self.question_service.get_all_questions()
         submitted_ids = {a.question_id for a in submitted_answers}
         return [q.id for q in all_questions if q.id not in submitted_ids]
+
+    def validate_answer_values(
+        self, submitted_answers: list[AnswerItemRequest]
+    ) -> list[dict]:
+        all_questions = self.question_service.get_all_questions()
+        questions_by_id = {q.id: q for q in all_questions}
+
+        errors = []
+        for answer in submitted_answers:
+            question = questions_by_id.get(answer.question_id)
+            if question is None or not question.possible_answers:
+                continue
+
+            valid_options = {opt.option for opt in question.possible_answers}
+
+            if question.type == QuestionTypes.SELECT:
+                if answer.value not in valid_options:
+                    errors.append({
+                        "question_id": str(answer.question_id),
+                        "question": question.question,
+                        "submitted_value": answer.value,
+                        "valid_options": list(valid_options),
+                        "error": "Value must be one of the valid options",
+                    })
+
+            elif question.type == QuestionTypes.CHECKBOX:
+                submitted_values = [v.strip() for v in answer.value.split(",")]
+                invalid_values = [v for v in submitted_values if v not in valid_options]
+                if invalid_values:
+                    errors.append({
+                        "question_id": str(answer.question_id),
+                        "question": question.question,
+                        "invalid_values": invalid_values,
+                        "valid_options": list(valid_options),
+                        "error": "All comma-separated values must be valid options",
+                    })
+
+        return errors
 
     def _to_response(self, answer: QuestionnaireAnswer, items) -> SurveyAnswerResponse:
         return SurveyAnswerResponse(
