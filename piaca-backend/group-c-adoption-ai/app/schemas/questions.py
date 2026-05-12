@@ -1,7 +1,7 @@
 from datetime import date
-from uuid import UUID
 from enum import Enum
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
