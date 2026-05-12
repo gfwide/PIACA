@@ -22,9 +22,9 @@ namespace PetManagementService.Models
 
         public List<Image> Images { get; set; } = new();
         public List<PetDisease> Diseases { get; set; } = new();
-        public List<PetTemperament> Temperaments { get; set; } = new();
-        public List<PetSociability> Sociabilities { get; set; } = new();
-        public List<VeterinaryCare> VeterinaryCares { get; set; } = new();
+        public List<PetTemperament> Temperament { get; set; } = new();
+        public List<PetSociability> Sociability { get; set; } = new();
+        public List<VeterinaryCare> VeterinaryCare { get; set; } = new();
         public List<Occurrence> Occurrences { get; set; } = new();
     }
 }

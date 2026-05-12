@@ -1,3 +1,5 @@
+using System.Linq;
+using PetManagementService.DTOs;
 using PetManagementService.Models;
 using PetManagementService.Repositories;
 
@@ -12,19 +14,43 @@ namespace PetManagementService.Services
             _petRepository = petRepository;
         }
 
-        public async Task<List<Pet>> GetAllPetsAsync()
+        public async Task<List<PetResponse>> GetAllPetsAsync()
         {
-            return await _petRepository.GetAllPetsAsync();
+            var pets = await _petRepository.GetAllPetsAsync();
+            return pets.Select(PetResponse.FromEntity).ToList();
         }
 
-        public async Task<Pet?> GetSinglePetAsync(Guid petId)
+        public async Task<PetResponse?> GetSinglePetAsync(Guid petId)
         {
             if (petId == Guid.Empty)
             {
                 throw new ArgumentException("A valid pet id must be provided.");
             }
 
-            return await _petRepository.GetSinglePetAsync(petId);
+            var pet = await _petRepository.GetSinglePetAsync(petId);
+            return pet == null ? null : PetResponse.FromEntity(pet);
+        }
+
+        public async Task<PetDetailsResponse?> GetPetDetailsAsync(Guid petId)
+        {
+            if (petId == Guid.Empty)
+            {
+                throw new ArgumentException("A valid pet id must be provided.");
+            }
+
+            var petDetails = await _petRepository.GetPetDetailsAsync(petId);
+            return petDetails == null ? null : PetDetailsResponse.FromEntity(petDetails);
+        }
+
+        public async Task<PetFullInfoResponse?> GetPetFullInfoAsync(Guid petId)
+        {
+            if (petId == Guid.Empty)
+            {
+                throw new ArgumentException("A valid pet id must be provided.");
+            }
+
+            var petFullInfo = await _petRepository.GetPetFullInfoAsync(petId);
+            return petFullInfo == null ? null : PetFullInfoResponse.FromEntity(petFullInfo);
         }
     }
 }

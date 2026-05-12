@@ -1,10 +1,12 @@
-using PetManagementService.Models;
+using PetManagementService.DTOs;
 
 namespace PetManagementService.Services
 {
     public interface IPetService
     {
-        Task<List<Pet>> GetAllPetsAsync();
-        Task<Pet?> GetSinglePetAsync(Guid petId);
+        Task<List<PetResponse>> GetAllPetsAsync();
+        Task<PetResponse?> GetSinglePetAsync(Guid petId);
+        Task<PetDetailsResponse?> GetPetDetailsAsync(Guid petId);
+        Task<PetFullInfoResponse?> GetPetFullInfoAsync(Guid petId);
     }
 }
