@@ -1,7 +1,13 @@
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from app.api.routers.doc_examples.survey_question import (
+    CREATE_QUESTION_EXAMPLES,
+    REORDER_QUESTION_EXAMPLES,
+    UPDATE_QUESTION_EXAMPLES,
+)
 from app.schemas.questions import (
     CreateQuestionRequest,
     QuestionResponse,
@@ -19,7 +25,7 @@ router = APIRouter(prefix="/questions")
 
 @router.post("/", response_model=CreatedResponse, status_code=201)
 def create_question(
-    data: CreateQuestionRequest,
+    data: Annotated[CreateQuestionRequest, CREATE_QUESTION_EXAMPLES],
     question_service: QuestionService = Depends(get_question_service),
 ):
     return question_service.create_question(data)
@@ -36,7 +42,7 @@ def delete_question(
 @router.patch("/{question_id}/reorder", response_model=UpdatedResponse)
 def reorder_question(
     question_id: UUID,
-    new_code: int = Body(..., embed=True),
+    new_code: int = REORDER_QUESTION_EXAMPLES,
     question_service: QuestionService = Depends(get_question_service),
 ):
     try:
@@ -51,7 +57,7 @@ def reorder_question(
 @router.patch("/{question_id}", response_model=UpdatedResponse)
 def update_question(
     question_id: UUID,
-    data: UpdateQuestionRequest,
+    data: Annotated[UpdateQuestionRequest, UPDATE_QUESTION_EXAMPLES],
     question_service: QuestionService = Depends(get_question_service),
 ):
     question = question_service.update_question(question_id, data)

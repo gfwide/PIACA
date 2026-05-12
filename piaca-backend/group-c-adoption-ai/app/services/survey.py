@@ -6,19 +6,31 @@ from fastapi import Depends
 from app.models.survey import QuestionnaireAnswer
 from app.repositories.survey import SurveyRepository, get_survey_repo
 from app.schemas.survey import (
+    AnswerItemRequest,
     AnswerItemResponse,
     SubmitSurveyRequest,
     SurveyAnswerResponse,
 )
+from app.services.question import QuestionService, get_question_service
+
+
+class MissingAnswersError(Exception):
+    def __init__(self, missing: list[UUID]):
+        self.missing = missing
 
 
 class SurveyService:
-    def __init__(self, repo: SurveyRepository):
+    def __init__(self, repo: SurveyRepository, question_service: QuestionService):
         self.repo = repo
+        self.question_service = question_service
 
     def submit_survey(
         self, user_id: UUID, data: SubmitSurveyRequest
     ) -> SurveyAnswerResponse:
+        missing = self.handle_not_matching_answers_amount(data.answers)
+        if missing:
+            raise MissingAnswersError(missing)
+
         today = date.today()
         answer = self.repo.create_answer(user_id, today)
         items = [
@@ -38,6 +50,10 @@ class SurveyService:
     def update_answers(
         self, user_id: UUID, data: SubmitSurveyRequest
     ) -> SurveyAnswerResponse | None:
+        missing = self.handle_not_matching_answers_amount(data.answers)
+        if missing:
+            raise MissingAnswersError(missing)
+
         answer = self.repo.get_latest_answer_by_user(user_id)
         if answer is None:
             return None
@@ -52,6 +68,13 @@ class SurveyService:
         ]
         self.repo.update_answer_timestamp(answer, today)
         return self._to_response(answer, items)
+
+    def handle_not_matching_answers_amount(
+        self, submitted_answers: list[AnswerItemRequest]
+    ) -> list[UUID]:
+        all_questions = self.question_service.get_all_questions()
+        submitted_ids = {a.question_id for a in submitted_answers}
+        return [q.id for q in all_questions if q.id not in submitted_ids]
 
     def _to_response(self, answer: QuestionnaireAnswer, items) -> SurveyAnswerResponse:
         return SurveyAnswerResponse(
@@ -69,5 +92,6 @@ class SurveyService:
 
 def get_survey_service(
     repo: SurveyRepository = Depends(get_survey_repo),
+    question_service: QuestionService = Depends(get_question_service),
 ) -> SurveyService:
-    return SurveyService(repo=repo)
+    return SurveyService(repo=repo, question_service=question_service)

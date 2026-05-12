@@ -1,9 +1,8 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
-
 from app.schemas.survey import SubmitSurveyRequest, SurveyAnswerResponse
-from app.services.survey import SurveyService, get_survey_service
+from app.services.survey import MissingAnswersError, SurveyService, get_survey_service
+from fastapi import APIRouter, Depends, HTTPException
 
 router = APIRouter(tags=["survey"])
 
@@ -14,7 +13,16 @@ def answer_survey(
     body: SubmitSurveyRequest,
     survey_service: SurveyService = Depends(get_survey_service),
 ) -> SurveyAnswerResponse:
-    return survey_service.submit_survey(user_id, body)
+    try:
+        return survey_service.submit_survey(user_id, body)
+    except MissingAnswersError as e:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "Not all questions were answered",
+                "missing_questions": [str(q) for q in e.missing],
+            },
+        )
 
 
 @router.get("/{user_id}", response_model=SurveyAnswerResponse)
@@ -36,7 +44,16 @@ def update_answers(
     body: SubmitSurveyRequest,
     survey_service: SurveyService = Depends(get_survey_service),
 ) -> SurveyAnswerResponse:
-    result = survey_service.update_answers(user_id, body)
+    try:
+        result = survey_service.update_answers(user_id, body)
+    except MissingAnswersError as e:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "Not all questions were answered",
+                "missing_questions": [str(q) for q in e.missing],
+            },
+        )
     if result is None:
         raise HTTPException(
             status_code=404, detail="No survey answers found for this user"
