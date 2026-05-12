@@ -123,6 +123,18 @@ Secrets necessarios no GitHub:
 | Marina Schwerz Bon | marinasbon |
 | Kristen Arguello | kristenarguello |
 
+## Grupo D: Apadrinhamento de Pets
+
+| Aluno | Usuário do GitHub |
+|-------------|---------|
+| Eduardo Tomacheski Teixeira | Etomacheski |
+| Gabriel Fanti de Souza | Gabriel_Fanti |
+| Gustavo Rech Saul | gustavorsaul |
+| João Pedro da Silva Graboski | JPG010 |
+| Matheus Braun Boff | Matheus-Boff |
+| Matheus Silva de Lima| MathsLima |
+
+
 ## Grupo E: Experiência Mobile
 
 | Aluno | Usuário do GitHub |
