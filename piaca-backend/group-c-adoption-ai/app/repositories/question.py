@@ -1,5 +1,4 @@
-import json
-from datetime import date, datetime, time
+from datetime import date
 from uuid import UUID
 
 from fastapi import Depends
@@ -9,190 +8,67 @@ from sqlalchemy.orm import Session
 
 from app.dependencies.database import piaca_db
 from app.models.questions import Question
-from app.schemas.questions import CreateQuestionRequest, QuestionResponse, QuestionTypes, SelectableOption, UpdateQuestionRequest
-from app.schemas.shared.responses import (
-    CreatedResponse,
-    DeletedResponse,
-    UpdatedResponse,
-)
 
 
 class QuestionRepository:
-    def __init__(
-        self,
-        session: Session,
-    ):
+    def __init__(self, session: Session):
         self.session = session
 
-    def create_question(self, data: CreateQuestionRequest) -> CreatedResponse:
-        possible_answers = (
-            json.dumps([opt.model_dump() for opt in data.possible_answers])
-            if data.possible_answers
-            else None
-        )
-        question = piaca_db.add(
+    def create_question(
+        self,
+        text: str,
+        possible_answers: str | None,
+        type: str,
+        code: int,
+        created_at: date,
+        updated_at: date,
+    ) -> Question:
+        return piaca_db.add(
             self.session,
             Question(
-                code=self._next_code(),
-                text=data.question,
+                text=text,
                 possible_answers=possible_answers,
-                type=data.type.value,
-                created_at=data.created_at,
-                updated_at=data.updated_at,
+                type=type,
+                code=code,
+                created_at=created_at,
+                updated_at=updated_at,
             ),
         )
 
-        return CreatedResponse(
-            id=question.id,
-            created_at=self._to_datetime(question.created_at),
-            function_response=self._to_dict(question),
-        )
+    def get_by_id(self, question_id: UUID) -> Question | None:
+        return piaca_db.get_by_id(self.session, Question, question_id)
 
-    def reorder_question(
-        self, question_id: UUID, new_code: int
-    ) -> UpdatedResponse | None:
-        question = self.session.get(Question, question_id)
-        if question is None:
-            return None
+    def get_all_ordered_by_code(self) -> list[Question]:
+        return self.session.query(Question).order_by(Question.code.asc()).all()
 
-        old_code = question.code
-        if old_code is None:
-            raise ValueError("Question has no code assigned and cannot be reordered")
+    def delete(self, question_id: UUID) -> bool:
+        return piaca_db.delete_by_id(self.session, Question, question_id)
 
-        max_code = self._max_code()
+    def update_fields(self, question_id: UUID, fields: dict) -> Question | None:
+        return piaca_db.update_by_id(self.session, Question, question_id, fields)
 
-        # clamp new_code to valid range [1, max_code]
-        new_code = max(1, min(new_code, max_code))
-
-        if old_code == new_code:
-            return UpdatedResponse(
-                id=question.id,
-                updated_at=self._to_datetime(question.updated_at),
-                function_response=self._to_dict(question),
-            )
-
-        if new_code > old_code:
-            # moving down: shift questions in (old_code, new_code] up by -1
-            self.session.execute(
-                sql_update(Question)
-                .where(Question.id != question_id)
-                .where(Question.code > old_code)
-                .where(Question.code <= new_code)
-                .values(code=Question.code - 1)
-            )
-        else:
-            # moving up: shift questions in [new_code, old_code) down by +1
-            self.session.execute(
-                sql_update(Question)
-                .where(Question.id != question_id)
-                .where(Question.code >= new_code)
-                .where(Question.code < old_code)
-                .values(code=Question.code + 1)
-            )
-
-        self.session.flush()
-        question.code = new_code
-        question.updated_at = date.today()
-        self.session.commit()
-        self.session.refresh(question)
-
-        return UpdatedResponse(
-            id=question.id,
-            updated_at=self._to_datetime(question.updated_at),
-            function_response=self._to_dict(question),
-        )
-
-    def get_questions_in_order(self) -> list[QuestionResponse]:
-        questions = self.session.query(Question).order_by(Question.code.asc()).all()
-        return [self._to_schema(q) for q in questions]
-
-    def get_question(self, question_id: UUID) -> QuestionResponse | None:
-        question = piaca_db.get_by_id(
-            self.session,
-            Question,
-            question_id,
-        )
-        if question is None:
-            return None
-
-        return self._to_schema(question)
-
-    def delete_question(self, question_id: UUID) -> DeletedResponse:
-        deleted = piaca_db.delete_by_id(
-            self.session,
-            Question,
-            question_id,
-        )
-
-        return DeletedResponse(id=question_id, deleted=deleted)
-
-    def update_question(
-        self, question_id: UUID, data: UpdateQuestionRequest
-    ) -> UpdatedResponse | None:
-        fields: dict = {"updated_at": date.today()}
-
-        if data.question is not None:
-            fields["text"] = data.question
-        if data.type is not None:
-            fields["type"] = data.type.value
-        if data.possible_answers is not None:
-            fields["possible_answers"] = (
-                json.dumps([opt.model_dump() for opt in data.possible_answers])
-                if data.possible_answers
-                else None
-            )
-
-        question = piaca_db.update_by_id(self.session, Question, question_id, fields)
-        if question is None:
-            return None
-
-        return UpdatedResponse(
-            id=question.id,
-            updated_at=self._to_datetime(question.updated_at),
-            function_response=self._to_dict(question),
-        )
-
-    def _to_dict(self, question: Question) -> dict[str, object]:
-        return {
-            "id": str(question.id),
-            "code": question.code,
-            "text": question.text,
-            "possible_answers": question.possible_answers,
-            "type": question.type,
-            "createdAt": question.created_at.isoformat()
-            if question.created_at is not None
-            else None,
-            "updatedAt": question.updated_at.isoformat()
-            if question.updated_at is not None
-            else None,
-        }
-
-    def _max_code(self) -> int:
+    def get_max_code(self) -> int:
         return self.session.query(func.max(Question.code)).scalar() or 0
 
-    def _next_code(self) -> int:
-        return self._max_code() + 1
-
-    def _to_schema(self, question: Question) -> QuestionResponse:
-        possible_answers = (
-            [SelectableOption(**opt) for opt in json.loads(question.possible_answers)]
-            if question.possible_answers
-            else []
+    def shift_codes_down(self, exclude_id: UUID, old_code: int, new_code: int) -> None:
+        self.session.execute(
+            sql_update(Question)
+            .where(Question.id != exclude_id)
+            .where(Question.code > old_code)
+            .where(Question.code <= new_code)
+            .values(code=Question.code - 1)
         )
-        return QuestionResponse(
-            id=question.id,
-            code=question.code,
-            type=QuestionTypes(question.type),
-            question=question.text,
-            possible_answers=possible_answers,
-            created_at=question.created_at,
-            updated_at=question.updated_at,
-        )
+        self.session.flush()
 
-    def _to_datetime(self, value: date | None) -> datetime:
-        if value is None:
-            return datetime.now()
-        return datetime.combine(value, time())
+    def shift_codes_up(self, exclude_id: UUID, old_code: int, new_code: int) -> None:
+        self.session.execute(
+            sql_update(Question)
+            .where(Question.id != exclude_id)
+            .where(Question.code >= new_code)
+            .where(Question.code < old_code)
+            .values(code=Question.code + 1)
+        )
+        self.session.flush()
 
 
 def get_question_repo(
