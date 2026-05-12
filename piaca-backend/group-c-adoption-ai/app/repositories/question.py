@@ -9,10 +9,9 @@ from sqlalchemy.orm import Session
 
 from app.dependencies.database import piaca_db
 from app.models.questions import Question
-from app.schemas.questions import CreateQuestionRequest
+from app.schemas.questions import CreateQuestionRequest, QuestionResponse, QuestionTypes, SelectableOption, UpdateQuestionRequest
 from app.schemas.shared.responses import (
     CreatedResponse,
-    DataResponse,
     DeletedResponse,
     UpdatedResponse,
 )
@@ -103,7 +102,11 @@ class QuestionRepository:
             function_response=self._to_dict(question),
         )
 
-    def get_question(self, question_id: UUID) -> DataResponse[dict] | None:
+    def get_questions_in_order(self) -> list[QuestionResponse]:
+        questions = self.session.query(Question).order_by(Question.code.asc()).all()
+        return [self._to_schema(q) for q in questions]
+
+    def get_question(self, question_id: UUID) -> QuestionResponse | None:
         question = piaca_db.get_by_id(
             self.session,
             Question,
@@ -112,7 +115,7 @@ class QuestionRepository:
         if question is None:
             return None
 
-        return DataResponse(data=self._to_dict(question))
+        return self._to_schema(question)
 
     def delete_question(self, question_id: UUID) -> DeletedResponse:
         deleted = piaca_db.delete_by_id(
@@ -123,17 +126,23 @@ class QuestionRepository:
 
         return DeletedResponse(id=question_id, deleted=deleted)
 
-    def update_question(self, question_id: UUID) -> UpdatedResponse | None:
-        today = date.today()
-        question = piaca_db.update_by_id(
-            self.session,
-            Question,
-            question_id,
-            {
-                "text": "updated mock question text",
-                "updated_at": today,
-            },
-        )
+    def update_question(
+        self, question_id: UUID, data: UpdateQuestionRequest
+    ) -> UpdatedResponse | None:
+        fields: dict = {"updated_at": date.today()}
+
+        if data.question is not None:
+            fields["text"] = data.question
+        if data.type is not None:
+            fields["type"] = data.type.value
+        if data.possible_answers is not None:
+            fields["possible_answers"] = (
+                json.dumps([opt.model_dump() for opt in data.possible_answers])
+                if data.possible_answers
+                else None
+            )
+
+        question = piaca_db.update_by_id(self.session, Question, question_id, fields)
         if question is None:
             return None
 
@@ -163,6 +172,22 @@ class QuestionRepository:
 
     def _next_code(self) -> int:
         return self._max_code() + 1
+
+    def _to_schema(self, question: Question) -> QuestionResponse:
+        possible_answers = (
+            [SelectableOption(**opt) for opt in json.loads(question.possible_answers)]
+            if question.possible_answers
+            else []
+        )
+        return QuestionResponse(
+            id=question.id,
+            code=question.code,
+            type=QuestionTypes(question.type),
+            question=question.text,
+            possible_answers=possible_answers,
+            created_at=question.created_at,
+            updated_at=question.updated_at,
+        )
 
     def _to_datetime(self, value: date | None) -> datetime:
         if value is None:

@@ -2,8 +2,16 @@ from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 
-from app.schemas.questions import CreateQuestionRequest
-from app.schemas.shared.responses import CreatedResponse, DataResponse, DeletedResponse, UpdatedResponse
+from app.schemas.questions import (
+    CreateQuestionRequest,
+    QuestionResponse,
+    UpdateQuestionRequest,
+)
+from app.schemas.shared.responses import (
+    CreatedResponse,
+    DeletedResponse,
+    UpdatedResponse,
+)
 from app.services.question import QuestionService, get_question_service
 
 router = APIRouter(prefix="/questions")
@@ -43,23 +51,24 @@ def reorder_question(
 @router.patch("/{question_id}", response_model=UpdatedResponse)
 def update_question(
     question_id: UUID,
+    data: UpdateQuestionRequest,
     question_service: QuestionService = Depends(get_question_service),
 ):
-    question = question_service.update_question(question_id)
+    question = question_service.update_question(question_id, data)
     if question is None:
         raise HTTPException(status_code=404, detail="Question not found")
 
     return question
 
 
-@router.get("/all")
+@router.get("/all", response_model=list[QuestionResponse])
 def get_all_questions(
     question_service: QuestionService = Depends(get_question_service),
 ):
-    return
+    return question_service.get_all_questions()
 
 
-@router.get("/{question_id}", response_model=DataResponse[dict])
+@router.get("/{question_id}", response_model=QuestionResponse)
 def get_one_question(
     question_id: UUID,
     question_service: QuestionService = Depends(get_question_service),
