@@ -42,7 +42,7 @@ def answer_survey(
 def get_user_answers(
     user_id: UUID,
     survey_service: SurveyService = Depends(get_survey_service),
-) -> SurveyAnswerResponse:
+) -> SurveyAnswerEnrichedResponse:
     result = survey_service.get_user_answers(user_id)
     if result is None:
         raise HTTPException(
