@@ -7,9 +7,11 @@ from app.models.survey import QuestionnaireAnswer
 from app.repositories.survey import SurveyRepository, get_survey_repo
 from app.schemas.questions import QuestionTypes
 from app.schemas.survey import (
+    AnswerItemEnrichedResponse,
     AnswerItemRequest,
     AnswerItemResponse,
     SubmitSurveyRequest,
+    SurveyAnswerEnrichedResponse,
     SurveyAnswerResponse,
 )
 from app.services.question import QuestionService, get_question_service
@@ -51,11 +53,26 @@ class SurveyService:
         ]
         return self._to_response(answer, items)
 
-    def get_user_answers(self, user_id: UUID) -> SurveyAnswerResponse | None:
+    def get_user_answers(self, user_id: UUID) -> SurveyAnswerEnrichedResponse | None:
         answer = self.repo.get_latest_answer_by_user(user_id)
         if answer is None:
             return None
-        return self._to_response(answer, answer.items)
+
+        questions_by_id = {
+            q.id: q.question for q in self.question_service.get_all_questions()
+        }
+        return SurveyAnswerEnrichedResponse(
+            id=answer.id,
+            user_id=answer.user_id,
+            submitted_at=answer.submitted_at,
+            answers=[
+                AnswerItemEnrichedResponse(
+                    question=questions_by_id.get(item.question_id, str(item.question_id)),
+                    answer=item.value,
+                )
+                for item in answer.items
+            ],
+        )
 
     def update_answers(
         self, user_id: UUID, data: SubmitSurveyRequest

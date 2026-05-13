@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from app.schemas.survey import SubmitSurveyRequest, SurveyAnswerResponse
+from app.schemas.survey import SubmitSurveyRequest, SurveyAnswerEnrichedResponse, SurveyAnswerResponse
 from app.services.survey import (
     InvalidAnswerValueError,
     MissingAnswersError,
@@ -38,7 +38,7 @@ def answer_survey(
         )
 
 
-@router.get("/{user_id}", response_model=SurveyAnswerResponse)
+@router.get("/{user_id}", response_model=SurveyAnswerEnrichedResponse)
 def get_user_answers(
     user_id: UUID,
     survey_service: SurveyService = Depends(get_survey_service),

@@ -24,3 +24,15 @@ class SurveyAnswerResponse(BaseModel):
     user_id: UUID
     submitted_at: date | None = None
     answers: list[AnswerItemResponse]
+
+
+class AnswerItemEnrichedResponse(BaseModel):
+    question: str
+    answer: str | None = None
+
+
+class SurveyAnswerEnrichedResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    submitted_at: date | None = None
+    answers: list[AnswerItemEnrichedResponse]
