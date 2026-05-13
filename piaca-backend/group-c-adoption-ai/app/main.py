@@ -1,3 +1,4 @@
+import app.models  # noqa: F401 — registers all models in SQLAlchemy metadata
 from fastapi import FastAPI
 
 from app.api.main_router import api_router
