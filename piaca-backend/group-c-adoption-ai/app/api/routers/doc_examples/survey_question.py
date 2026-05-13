@@ -4,21 +4,27 @@ CREATE_QUESTION_EXAMPLES = Body(
     openapi_examples={
         "text": {
             "summary": "Text question",
-            "value": {"type": "text", "question": "Descreva a rotina do seu pet."},
+            "value": {
+                "type": "text",
+                "question": "Descreva sua rotina diária e quanto tempo você tem disponível para dedicar a um pet.",
+            },
         },
         "boolean": {
             "summary": "Boolean question",
-            "value": {"type": "boolean", "question": "Você tem quintal?"},
+            "value": {
+                "type": "boolean",
+                "question": "Você mora em casa com quintal?",
+            },
         },
         "select": {
             "summary": "Select question",
             "value": {
                 "type": "select",
-                "question": "Com que frequência o pet é vacinado?",
+                "question": "Qual é o seu tipo de moradia?",
                 "possible_answers": [
-                    {"option": "Anualmente"},
-                    {"option": "A cada 6 meses"},
-                    {"option": "Nunca"},
+                    {"option": "Casa"},
+                    {"option": "Apartamento"},
+                    {"option": "Chácara ou sítio"},
                 ],
             },
         },
@@ -26,11 +32,12 @@ CREATE_QUESTION_EXAMPLES = Body(
             "summary": "Checkbox question",
             "value": {
                 "type": "checkbox",
-                "question": "Quais animais você já teve?",
+                "question": "Quem mora com você?",
                 "possible_answers": [
-                    {"option": "Cachorro"},
-                    {"option": "Gato"},
-                    {"option": "Pássaro"},
+                    {"option": "Crianças"},
+                    {"option": "Idosos"},
+                    {"option": "Outros pets"},
+                    {"option": "Moro sozinho(a)"},
                 ],
             },
         },
@@ -56,17 +63,19 @@ UPDATE_QUESTION_EXAMPLES = Body(
     openapi_examples={
         "update_text": {
             "summary": "Update question text",
-            "value": {"question": "Novo texto da pergunta?"},
+            "value": {
+                "question": "Você tem experiência prévia com animais de estimação?",
+            },
         },
         "update_type_to_select": {
             "summary": "Change type to select",
             "value": {
                 "type": "select",
-                "question": "Qual o porte do seu pet?",
+                "question": "Qual nível de atividade física você consegue oferecer ao pet?",
                 "possible_answers": [
-                    {"option": "Pequeno"},
-                    {"option": "Médio"},
-                    {"option": "Grande"},
+                    {"option": "Baixo — passeios curtos ocasionais"},
+                    {"option": "Médio — passeios diários"},
+                    {"option": "Alto — exercícios intensos frequentes"},
                 ],
             },
         },
