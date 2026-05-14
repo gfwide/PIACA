@@ -114,6 +114,19 @@ Secrets necessarios no GitHub:
 
 ## Autores
 
+## Grupo B: Gestao de Pets
+
+| Aluno | Usuário do GitHub |
+|-------------|---------|
+| Gustavo Fulber Wide| gfwide |
+| Carolina Shypelenko Kowaluk| carolina-kowaluk|
+| Pietra Renner | pietrarenner|
+| Gabriele Colares | gabicolares |
+| Julia Agustini| juhagustinii |
+| Deborah Citrin| |
+| Nicolas Pietro | |
+| Lucas Ulson | |
+
 ## Grupo C: Adoção e IA
 
 | Aluno | Usuário do GitHub |
